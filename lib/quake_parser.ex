@@ -1,18 +1,16 @@
 defmodule QuakeParser do
   @moduledoc """
-  Documentation for `QuakeParser`.
+  `QuakeParser` is a parser for Quake game logs.
   """
 
-  @doc """
-  Hello world.
+  def start(path) do
+    validate_file(path)
+  end
 
-  ## Examples
-
-      iex> QuakeParser.hello()
-      :world
-
-  """
-  def hello do
-    :world
+  defp validate_file(path) do
+    case File.read(path) do
+      {:ok, content} -> content
+      {:error, _} -> raise "Invalid file path: #{path}"
+    end
   end
 end
