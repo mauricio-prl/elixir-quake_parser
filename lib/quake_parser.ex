@@ -3,12 +3,18 @@ defmodule QuakeParser do
   `QuakeParser` is a parser for Quake game logs.
   """
 
+  @type t :: %__MODULE__{
+          total_kills: Integer.t(),
+          players: [String.t()],
+          kills: Map.t()
+        }
+
   defstruct total_kills: 0, players: [], kills: %{}
 
   @doc """
   Parse the Quake log file, and return a QuakeParser object for each game.
   """
-  @spec start(String.t()) :: list()
+  @spec start(String.t()) :: list(%__MODULE__{})
   def start(path) do
     with {:ok, content} <- File.read(path) do
       content
