@@ -38,7 +38,7 @@ defmodule QuakeParser do
       ]
   ```
   """
-  @spec start(String.t()) :: list(%__MODULE__{})
+  @spec start(String.t()) :: list(__MODULE__.t())
   def start(path) do
     with {:ok, content} <- File.read(path) do
       content
