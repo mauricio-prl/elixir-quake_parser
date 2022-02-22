@@ -4,9 +4,11 @@ defmodule QuakeParserTest do
 
   describe "start/1" do
     test "raises an error when invalid filepath" do
-      invalid_path = "invalid_path.txt"
-
-      assert QuakeParser.start(invalid_path) == {:error, :enoent}
+      assert_raise File.Error,
+                   "could not stream \"invalid_path.txt\": no such file or directory",
+                   fn ->
+                     QuakeParser.start("invalid_path.txt")
+                   end
     end
 
     test "returns a list of Game struct" do
@@ -37,6 +39,14 @@ defmodule QuakeParserTest do
   end
 
   describe "death_report/1" do
+    test "raises an error when invalid filepath" do
+      assert_raise File.Error,
+                   "could not stream \"invalid_path.txt\": no such file or directory",
+                   fn ->
+                     QuakeParser.start("invalid_path.txt")
+                   end
+    end
+
     test "returns a map of games, and each map contains the number of deaths per meaning" do
       assert QuakeParser.death_report("test/fixtures/log.txt") == %{
                0 => %{

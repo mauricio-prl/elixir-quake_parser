@@ -11,6 +11,7 @@ defmodule QuakeParser do
 
   defstruct total_kills: 0, players: [], kills: %{}
 
+  @init_game_key "InitGame:"
   @kill_key "Kill:"
 
   @doc """
@@ -40,11 +41,9 @@ defmodule QuakeParser do
   """
   @spec start(String.t()) :: list(__MODULE__.t())
   def start(path) do
-    with {:ok, content} <- File.read(path) do
-      content
-      |> find_games
-      |> Enum.map(&parse_game/1)
-    end
+    File.stream!(path)
+    |> find_games
+    |> Enum.map(&parse_game/1)
   end
 
   @doc """
@@ -69,15 +68,13 @@ defmodule QuakeParser do
   """
   @spec death_report(String.t()) :: %{Integer.t() => %{String.t() => Integer.t()}}
   def death_report(path) do
-    with {:ok, content} <- File.read(path) do
-      content
-      |> find_games
-      |> Enum.map(&game_kills/1)
-      |> Enum.map(&build_death_report/1)
-      |> Enum.with_index()
-      |> Enum.map(fn {obj, index} -> {index, obj} end)
-      |> Enum.into(%{})
-    end
+    File.stream!(path)
+    |> find_games
+    |> Enum.map(&game_kills/1)
+    |> Enum.map(&build_death_report/1)
+    |> Enum.with_index()
+    |> Enum.map(fn {obj, index} -> {index, obj} end)
+    |> Enum.into(%{})
   end
 
   defp parse_game(game) do
@@ -88,8 +85,10 @@ defmodule QuakeParser do
     %__MODULE__{total_kills: total_kills, players: players, kills: kills}
   end
 
-  defp find_games(log_content) do
-    [_h | games] = String.split(log_content, "InitGame:")
+  defp find_games(stream) do
+    log_content = Enum.join(stream)
+
+    [_ | games] = String.split(log_content, @init_game_key)
 
     Enum.map(games, &String.split(&1, "\n"))
   end
@@ -100,12 +99,12 @@ defmodule QuakeParser do
     finish = "\\t"
 
     game
-    |> Enum.filter(fn str -> String.contains?(str, key) end)
-    |> Enum.map(fn str -> String.split(str, start) end)
+    |> Enum.filter(&String.contains?(&1, key))
+    |> Enum.map(&String.split(&1, start))
     |> Enum.map(fn [_, str] -> str end)
-    |> Enum.map(fn str -> String.split(str, finish) end)
+    |> Enum.map(&String.split(&1, finish))
     |> Enum.map(fn [str | _] -> str end)
-    |> Enum.map(fn str -> String.replace(str, "!", "") end)
+    |> Enum.map(&String.replace(&1, "!", ""))
     |> Enum.uniq()
   end
 
@@ -127,14 +126,14 @@ defmodule QuakeParser do
 
   defp find_kills_of_player(player, game_kills) do
     game_kills
-    |> Enum.filter(fn str -> String.contains?(str, "#{player} killed") end)
+    |> Enum.filter(&String.contains?(&1, "#{player} killed"))
     |> Enum.count()
   end
 
   defp discount_world_deaths(kills, player, game_kills) do
     world_deaths =
       game_kills
-      |> Enum.filter(fn str -> String.contains?(str, "<world> killed #{player}") end)
+      |> Enum.filter(&String.contains?(&1, "<world> killed #{player}"))
       |> Enum.count()
 
     kills - world_deaths
