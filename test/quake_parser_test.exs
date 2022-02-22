@@ -36,7 +36,7 @@ defmodule QuakeParserTest do
     end
   end
 
-  describe ".death_report/1" do
+  describe "death_report/1" do
     test "returns a map of games, and each map contains the number of deaths per meaning" do
       assert QuakeParser.death_report("test/fixtures/log.txt") == %{
                0 => %{
