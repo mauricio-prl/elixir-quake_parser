@@ -11,8 +11,32 @@ defmodule QuakeParser do
 
   defstruct total_kills: 0, players: [], kills: %{}
 
+  @kill_key "Kill:"
+
   @doc """
   Parse the Quake log file, and return a QuakeParser object for each game.
+
+  ## Examples
+
+  ```
+      iex>QuakeParser.start("test/fixtures/log.txt")
+      [
+        %QuakeParser{
+          kills: %{
+            "Assasinu Credi" => 22,
+            "Chessus" => 0,
+            "Dono da Bola" => 12,
+            "Isgalamido" => 16,
+            "Mal" => -3,
+            "Oootsimo" => 20,
+            "Zeh" => 9
+          },
+          players: ["Oootsimo", "Isgalamido", "Zeh", "Dono da Bola", "Mal",
+          "Assasinu Credi", "Chessus"],
+          total_kills: 130
+        }
+      ]
+  ```
   """
   @spec start(String.t()) :: list(%__MODULE__{})
   def start(path) do
@@ -26,8 +50,24 @@ defmodule QuakeParser do
   @doc """
   Parse the Quake log file, and return a map with the number of game in a row, and each value
   is another map with how much deaths per meaning.
+
+  ## Examples
+  ```
+      iex> QuakeParser.death_report("test/fixtures/log.txt")
+      %{
+        0 => %{
+          "MOD_FALLING" => 7,
+          "MOD_MACHINEGUN" => 9,
+          "MOD_RAILGUN" => 9,
+          "MOD_ROCKET" => 78,
+          "MOD_ROCKET_SPLASH" => 49,
+          "MOD_SHOTGUN" => 7,
+          "MOD_TRIGGER_HURT" => 20
+        }
+      }
+  ```
   """
-  @spec death_report(String.t()) :: Map.t()
+  @spec death_report(String.t()) :: %{Integer.t() => %{String.t() => Integer.t()}}
   def death_report(path) do
     with {:ok, content} <- File.read(path) do
       content
@@ -75,9 +115,7 @@ defmodule QuakeParser do
     |> Enum.into(%{})
   end
 
-  defp game_kills(game) do
-    Enum.filter(game, &String.contains?(&1, "Kill:"))
-  end
+  defp game_kills(game), do: Enum.filter(game, &String.contains?(&1, @kill_key))
 
   defp kills_of_player(player, game_kills) do
     result =
@@ -104,7 +142,7 @@ defmodule QuakeParser do
 
   defp build_death_report(game_kills) do
     game_kills
-    |> means_of_death
+    |> causes_of_death
     |> Enum.map(&death_counter(&1, game_kills))
     |> Enum.into(%{})
   end
@@ -118,7 +156,7 @@ defmodule QuakeParser do
     {mean, count}
   end
 
-  defp means_of_death(game_kills) do
+  defp causes_of_death(game_kills) do
     game_kills
     |> Enum.map(&String.split(&1, "by "))
     |> Enum.map(fn [_, str] -> str end)
