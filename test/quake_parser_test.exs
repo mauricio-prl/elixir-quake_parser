@@ -2,17 +2,17 @@ defmodule QuakeParserTest do
   use ExUnit.Case, async: true
   doctest QuakeParser
 
-  describe "start/1" do
+  describe "parse/1" do
     test "raises an error when invalid filepath" do
       assert_raise File.Error,
                    "could not stream \"invalid_path.txt\": no such file or directory",
                    fn ->
-                     QuakeParser.start("invalid_path.txt")
+                     QuakeParser.parse("invalid_path.txt")
                    end
     end
 
     test "returns a list of Game struct" do
-      assert QuakeParser.start("test/fixtures/log.txt") == [
+      assert QuakeParser.parse("test/fixtures/log.txt") == [
                %QuakeParser{
                  kills: %{
                    "Assasinu Credi" => 22,
@@ -57,7 +57,7 @@ defmodule QuakeParserTest do
       assert_raise File.Error,
                    "could not stream \"invalid_path.txt\": no such file or directory",
                    fn ->
-                     QuakeParser.start("invalid_path.txt")
+                     QuakeParser.death_report("invalid_path.txt")
                    end
     end
 

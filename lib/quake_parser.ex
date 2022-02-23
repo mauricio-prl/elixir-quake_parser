@@ -22,7 +22,7 @@ defmodule QuakeParser do
   ## Examples
 
   ```
-      iex>QuakeParser.start("test/fixtures/log.txt")
+      iex>QuakeParser.parse("test/fixtures/log.txt")
       [
         %QuakeParser{
           kills: %{
@@ -41,8 +41,8 @@ defmodule QuakeParser do
       ]
   ```
   """
-  @spec start(String.t()) :: list(__MODULE__.t())
-  def start(path) do
+  @spec parse(String.t()) :: list(__MODULE__.t())
+  def parse(path) do
     File.stream!(path)
     |> find_games
     |> Enum.map(&parse_game/1)
@@ -67,7 +67,7 @@ defmodule QuakeParser do
   """
   @spec scoreboard(String.t()) :: %{String.t() => Integer.t()}
   def scoreboard(path) do
-    start(path)
+    parse(path)
     |> Enum.map(fn %__MODULE__{kills: kills} -> kills end)
     |> build_full_scoreboard
   end
@@ -119,9 +119,7 @@ defmodule QuakeParser do
     Enum.map(games, &String.split(&1, "\n"))
   end
 
-  defp build_full_scoreboard(scores) do
-    merge_scoreboards(scores, %{})
-  end
+  defp build_full_scoreboard(scores), do: merge_scoreboards(scores, %{})
 
   defp merge_scoreboards([], result), do: result
 
