@@ -6,8 +6,10 @@ defmodule QuakeParser do
   @type t :: %__MODULE__{
           total_kills: Integer.t(),
           players: [String.t()],
-          kills: Map.t()
+          kills: %{non_neg_integer() => kill}
         }
+
+  @typep kill :: %{String.t() => Integer.t()}
 
   defstruct total_kills: 0, players: [], kills: %{}
 
@@ -66,7 +68,7 @@ defmodule QuakeParser do
       }
   ```
   """
-  @spec death_report(String.t()) :: %{Integer.t() => %{String.t() => Integer.t()}}
+  @spec death_report(String.t()) :: %{non_neg_integer() => %{String.t() => non_neg_integer()}}
   def death_report(path) do
     File.stream!(path)
     |> find_games
