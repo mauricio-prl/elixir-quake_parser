@@ -37,7 +37,7 @@ You should see an output like:
 
 ```elixir
 [
-  %QuakeParser.Game{
+  %QuakeParser{
     kills: %{
       "Dono da Bola" => -1,
       "Isgalamido" => 1,
@@ -49,6 +49,26 @@ You should see an output like:
   }
 ]
 ```
+
+Scoreboard:
+
+```elixir
+QuakeParser.scoreboard("path/to/log")
+```
+
+```elixir
+%{
+  "Assasinu Credi" => 22,
+  "Chessus" => 0,
+  "Dono da Bola" => 12,
+  "Isgalamido" => 16,
+  "Mal" => -3,
+  "Oootsimo" => 20,
+  "Zeh" => 9
+}
+```
+
+Deaths report:
 
 ```elixir
 QuakeParser.death_report("path/to/log")

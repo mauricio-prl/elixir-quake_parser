@@ -38,6 +38,20 @@ defmodule QuakeParserTest do
     end
   end
 
+  describe "scoreboard/1" do
+    test "returns a map with the score of each player for all games of the log" do
+      assert QuakeParser.scoreboard("test/fixtures/log.txt") == %{
+               "Assasinu Credi" => 22,
+               "Chessus" => 0,
+               "Dono da Bola" => 12,
+               "Isgalamido" => 16,
+               "Mal" => -3,
+               "Oootsimo" => 20,
+               "Zeh" => 9
+             }
+    end
+  end
+
   describe "death_report/1" do
     test "raises an error when invalid filepath" do
       assert_raise File.Error,
