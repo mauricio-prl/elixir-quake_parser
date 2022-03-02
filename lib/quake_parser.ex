@@ -65,11 +65,11 @@ defmodule QuakeParser do
       }
   ```
   """
-  @spec scoreboard(String.t()) :: %{String.t() => Integer.t()}
+  @spec scoreboard(String.t()) :: kill
   def scoreboard(path) do
     parse(path)
     |> Enum.map(fn %__MODULE__{kills: kills} -> kills end)
-    |> build_full_scoreboard
+    |> build_full_scoreboard()
   end
 
   @doc """
