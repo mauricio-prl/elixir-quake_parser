@@ -22,7 +22,7 @@ defmodule QuakeParser do
   ## Examples
 
   ```
-      iex>QuakeParser.start("test/fixtures/log.txt")
+      iex>QuakeParser.parse("test/fixtures/log.txt")
       [
         %QuakeParser{
           kills: %{
@@ -41,11 +41,35 @@ defmodule QuakeParser do
       ]
   ```
   """
-  @spec start(String.t()) :: list(__MODULE__.t())
-  def start(path) do
+  @spec parse(String.t()) :: list(__MODULE__.t())
+  def parse(path) do
     File.stream!(path)
     |> find_games
     |> Enum.map(&parse_game/1)
+  end
+
+  @doc """
+  Build a map with the kills of each player for all games of the log.
+
+  ## Examples
+  ```
+      iex(4)> QuakeParser.scoreboard("test/fixtures/log.txt")
+      %{
+        "Assasinu Credi" => 22,
+        "Chessus" => 0,
+        "Dono da Bola" => 12,
+        "Isgalamido" => 16,
+        "Mal" => -3,
+        "Oootsimo" => 20,
+        "Zeh" => 9
+      }
+  ```
+  """
+  @spec scoreboard(String.t()) :: kill
+  def scoreboard(path) do
+    parse(path)
+    |> Enum.map(fn %__MODULE__{kills: kills} -> kills end)
+    |> build_full_scoreboard()
   end
 
   @doc """
@@ -93,6 +117,14 @@ defmodule QuakeParser do
     [_ | games] = String.split(log_content, @init_game_key)
 
     Enum.map(games, &String.split(&1, "\n"))
+  end
+
+  defp build_full_scoreboard(scores), do: merge_scoreboards(scores, %{})
+
+  defp merge_scoreboards([], result), do: result
+
+  defp merge_scoreboards([score | tail], result) do
+    merge_scoreboards(tail, Map.merge(result, score, fn _k, v1, v2 -> v1 + v2 end))
   end
 
   defp find_players(game) do
