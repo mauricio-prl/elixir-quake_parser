@@ -30,7 +30,7 @@ iex -S mix
 Then call `start` and `death_report` functions passing the filepath of the log:
 
 ```elixir
-QuakeParser.start("path/to/log")
+QuakeParser.parse("path/to/log")
 ```
 
 You should see an output like:
