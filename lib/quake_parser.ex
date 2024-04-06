@@ -4,12 +4,12 @@ defmodule QuakeParser do
   """
 
   @type t :: %__MODULE__{
-          total_kills: Integer.t(),
+          total_kills: integer,
           players: [String.t()],
           kills: %{non_neg_integer() => kill}
         }
 
-  @typep kill :: %{String.t() => Integer.t()}
+  @typep kill :: %{String.t() => integer}
 
   defstruct total_kills: 0, players: [], kills: %{}
 
