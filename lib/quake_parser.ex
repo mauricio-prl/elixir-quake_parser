@@ -132,6 +132,14 @@ defmodule QuakeParser do
     |> build_full_scoreboard()
   end
 
+  defp build_full_scoreboard(scores), do: merge_scoreboards(scores, %{})
+
+  defp merge_scoreboards([], result), do: result
+
+  defp merge_scoreboards([score | tail], result) do
+    merge_scoreboards(tail, Map.merge(result, score, fn _k, v1, v2 -> v1 + v2 end))
+  end
+
   @doc """
   Parse the Quake log file, and return a map with the number of game in a row, and each value
   is another map with how much deaths per meaning.
@@ -161,14 +169,6 @@ defmodule QuakeParser do
     |> Enum.with_index()
     |> Enum.map(fn {obj, index} -> {index, obj} end)
     |> Enum.into(%{})
-  end
-
-  defp build_full_scoreboard(scores), do: merge_scoreboards(scores, %{})
-
-  defp merge_scoreboards([], result), do: result
-
-  defp merge_scoreboards([score | tail], result) do
-    merge_scoreboards(tail, Map.merge(result, score, fn _k, v1, v2 -> v1 + v2 end))
   end
 
   defp build_death_report(game_kills) do
