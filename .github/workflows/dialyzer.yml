@@ -23,7 +23,7 @@ jobs:
         id: beam
         uses: erlef/setup-beam@v1
         with:
-          otp-version: "26." # Define the OTP version
+          otp-version: "26.2" # Define the OTP version
           elixir-version: "1.16" # Define the Elixir version
 
        # Cache key based on Erlang/Elixir version and the mix.lock hash
