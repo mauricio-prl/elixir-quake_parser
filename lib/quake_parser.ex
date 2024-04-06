@@ -15,6 +15,7 @@ defmodule QuakeParser do
 
   @init_game_key "InitGame:"
   @kill_key "Kill:"
+  @username_regex ~r/n\\((\w|\s)+)\\t/
 
   @doc """
   Parse the Quake log file, and return a QuakeParser object for each game.
@@ -46,6 +47,68 @@ defmodule QuakeParser do
     File.stream!(path)
     |> find_games
     |> Enum.map(&parse_game/1)
+  end
+
+  defp find_games(stream) do
+    log_content = Enum.join(stream)
+    [_ | games] = String.split(log_content, @init_game_key)
+
+    Enum.map(games, &String.split(&1, "\n"))
+  end
+
+  defp parse_game(game) do
+    total_kills = Enum.count(game_kills(game))
+    players = find_players(game)
+    kills = count_death_by_players(players, game)
+
+    %__MODULE__{total_kills: total_kills, players: players, kills: kills}
+  end
+
+  defp find_players(game) do
+    game
+    |> Enum.map(&retrieve_username/1)
+    |> Enum.reject(&is_nil/1)
+    |> Enum.uniq()
+  end
+
+  defp retrieve_username(line) do
+    result = Regex.run(@username_regex, line)
+
+    case result do
+      [_, username, _] -> username
+      _ -> nil
+    end
+  end
+
+  defp count_death_by_players(players, game) do
+    players
+    |> Enum.map(&kills_of_player(&1, game_kills(game)))
+    |> Enum.into(%{})
+  end
+
+  defp game_kills(game), do: Enum.filter(game, &String.contains?(&1, @kill_key))
+
+  defp kills_of_player(player, game_kills) do
+    result =
+      find_kills_of_player(player, game_kills)
+      |> discount_world_deaths(player, game_kills)
+
+    {player, result}
+  end
+
+  defp find_kills_of_player(player, game_kills) do
+    game_kills
+    |> Enum.filter(&String.contains?(&1, "#{player} killed"))
+    |> Enum.count()
+  end
+
+  defp discount_world_deaths(kills, player, game_kills) do
+    world_deaths =
+      game_kills
+      |> Enum.filter(&String.contains?(&1, "<world> killed #{player}"))
+      |> Enum.count()
+
+    kills - world_deaths
   end
 
   @doc """
@@ -103,74 +166,12 @@ defmodule QuakeParser do
     |> Enum.into(%{})
   end
 
-  defp parse_game(game) do
-    total_kills = game_kills(game) |> Enum.count()
-    players = find_players(game)
-    kills = count_death_by_players(players, game)
-
-    %__MODULE__{total_kills: total_kills, players: players, kills: kills}
-  end
-
-  defp find_games(stream) do
-    log_content = Enum.join(stream)
-
-    [_ | games] = String.split(log_content, @init_game_key)
-
-    Enum.map(games, &String.split(&1, "\n"))
-  end
-
   defp build_full_scoreboard(scores), do: merge_scoreboards(scores, %{})
 
   defp merge_scoreboards([], result), do: result
 
   defp merge_scoreboards([score | tail], result) do
     merge_scoreboards(tail, Map.merge(result, score, fn _k, v1, v2 -> v1 + v2 end))
-  end
-
-  defp find_players(game) do
-    key = "ClientUserinfoChanged:"
-    start = " n\\"
-    finish = "\\t"
-
-    game
-    |> Enum.filter(&String.contains?(&1, key))
-    |> Enum.map(&String.split(&1, start))
-    |> Enum.map(fn [_, str] -> str end)
-    |> Enum.map(&String.split(&1, finish))
-    |> Enum.map(fn [str | _] -> str end)
-    |> Enum.map(&String.replace(&1, "!", ""))
-    |> Enum.uniq()
-  end
-
-  defp count_death_by_players(players, game) do
-    players
-    |> Enum.map(&kills_of_player(&1, game_kills(game)))
-    |> Enum.into(%{})
-  end
-
-  defp game_kills(game), do: Enum.filter(game, &String.contains?(&1, @kill_key))
-
-  defp kills_of_player(player, game_kills) do
-    result =
-      find_kills_of_player(player, game_kills)
-      |> discount_world_deaths(player, game_kills)
-
-    {player, result}
-  end
-
-  defp find_kills_of_player(player, game_kills) do
-    game_kills
-    |> Enum.filter(&String.contains?(&1, "#{player} killed"))
-    |> Enum.count()
-  end
-
-  defp discount_world_deaths(kills, player, game_kills) do
-    world_deaths =
-      game_kills
-      |> Enum.filter(&String.contains?(&1, "<world> killed #{player}"))
-      |> Enum.count()
-
-    kills - world_deaths
   end
 
   defp build_death_report(game_kills) do
