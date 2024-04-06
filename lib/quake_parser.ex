@@ -57,11 +57,13 @@ defmodule QuakeParser do
   end
 
   defp parse_game(game) do
-    total_kills = Enum.count(game_kills(game))
     players = find_players(game)
-    kills = count_death_by_players(players, game)
 
-    %__MODULE__{total_kills: total_kills, players: players, kills: kills}
+    %__MODULE__{
+      total_kills: Enum.count(game_kills(game)),
+      players: players,
+      kills: kills_by_players(players, game)
+    }
   end
 
   defp find_players(game) do
@@ -80,7 +82,7 @@ defmodule QuakeParser do
     end
   end
 
-  defp count_death_by_players(players, game) do
+  defp kills_by_players(players, game) do
     players
     |> Enum.map(&kills_of_player(&1, game_kills(game)))
     |> Enum.into(%{})
@@ -89,9 +91,7 @@ defmodule QuakeParser do
   defp game_kills(game), do: Enum.filter(game, &String.contains?(&1, @kill_key))
 
   defp kills_of_player(player, game_kills) do
-    result =
-      find_kills_of_player(player, game_kills)
-      |> discount_world_deaths(player, game_kills)
+    result = find_kills_of_player(player, game_kills) - world_deaths(player, game_kills)
 
     {player, result}
   end
@@ -102,13 +102,10 @@ defmodule QuakeParser do
     |> Enum.count()
   end
 
-  defp discount_world_deaths(kills, player, game_kills) do
-    world_deaths =
-      game_kills
-      |> Enum.filter(&String.contains?(&1, "<world> killed #{player}"))
-      |> Enum.count()
-
-    kills - world_deaths
+  defp world_deaths(player, game_kills) do
+    game_kills
+    |> Enum.filter(&String.contains?(&1, "<world> killed #{player}"))
+    |> Enum.count()
   end
 
   @doc """
