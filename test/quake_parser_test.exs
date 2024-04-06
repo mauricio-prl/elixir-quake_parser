@@ -50,6 +50,22 @@ defmodule QuakeParserTest do
                "Zeh" => 9
              }
     end
+
+    test "returns a map with all games score" do
+      assert QuakeParser.scoreboard("test/fixtures/full_log.txt") == %{
+               "Assasinu Credi" => 111,
+               "Chessus" => 33,
+               "Dono da Bola" => 63,
+               "Fasano Again" => 0,
+               "Isgalamido" => 147,
+               "Mal" => -4,
+               "Maluquinho" => 0,
+               "Mocinha" => 0,
+               "Oootsimo" => 114,
+               "UnnamedPlayer" => 0,
+               "Zeh" => 124
+             }
+    end
   end
 
   describe "death_report/1" do
